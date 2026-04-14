@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mini Geometry Dash</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let player = {
+  x: 100,
+  y: canvas.height - 150,
+  size: 40,
+  dy: 0,
+  gravity: 0.8,
+  jumpPower: -15,
+  grounded: true
+};
+
+let obstacles = [];
+let frame = 0;
+let speed = 6;
+
+// Jump on click or space
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && player.grounded) {
+    player.dy = player.jumpPower;
+    player.grounded = false;
+  }
+});
+document.addEventListener("click", () => {
+  if (player.grounded) {
+    player.dy = player.jumpPower;
+    player.grounded = false;
+  }
+});
+
+function spawnObstacle() {
+  obstacles.push({
+    x: canvas.width,
+    y: canvas.height - 100,
+    width: 30,
+    height: 60
+  });
+}
+
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Ground
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, canvas.height - 100, canvas.width, 5);
+
+  // Player physics
+  player.y += player.dy;
+  player.dy += player.gravity;
+
+  if (player.y >= canvas.height - 140) {
+    player.y = canvas.height - 140;
+    player.dy = 0;
+    player.grounded = true;
+  }
+
+  // Draw player
+  ctx.fillStyle = "cyan";
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+
+  // Obstacles
+  if (frame % 90 === 0) spawnObstacle();
+
+  obstacles.forEach((obs, index) => {
+    obs.x -= speed;
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(obs.x, obs.y - obs.height, obs.width, obs.height);
+
+    // Collision
+    if (
+      player.x < obs.x + obs.width &&
+      player.x + player.size > obs.x &&
+      player.y < obs.y &&
+      player.y + player.size > obs.y - obs.height
+    ) {
+      alert("Game Over!");
+      document.location.reload();
+    }
+
+    // Remove off-screen
+    if (obs.x + obs.width < 0) {
+      obstacles.splice(index, 1);
+    }
+  });
+
+  frame++;
+  requestAnimationFrame(update);
+}
+
+update();
+</script>
+
+</body>
+</html>
